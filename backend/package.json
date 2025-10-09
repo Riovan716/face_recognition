@@ -1,0 +1,28 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "face-api.js": "^0.22.2",
+    "argon2": "^0.28.7",
+    "axios": "^1.9.0",
+    "canvas": "^3.1.0",
+    "connect-session-sequelize": "^7.1.4",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.1",
+    "express": "^4.18.1",
+    "express-session": "^1.17.3",
+    "multer": "^2.0.1",
+    "mysql2": "^3.14.0",
+    "sequelize": "^6.21.3",
+    "xlsx": "^0.18.5"
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "name": "proyek-desktop",
+  "version": "1.0.0",
+  "main": "electron/main.js",
+  "scripts": {
+    "start": "electron ./electron/main.js",
+    "dev": "cross-env NODE_ENV=development electron ./electron/main.js",
+    "prod": "cross-env NODE_ENV=production electron ./electron/main.js",
+    "build:frontend": "cd frontend && npm run build",
+    "start:backend": "cd backend && npm start",
+    "start:frontend": "cd frontend && npm run dev",
+    "build": "node build.js",
+    "build:win": "npm run build:frontend && electron-builder --win",
+    "dist": "electron-builder",
+    "postinstall": "npm run build:frontend"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "electron": "^37.0.0",
+    "electron-builder": "^26.0.12",
+    "cross-env": "^7.0.3"
+  },
+  "build": {
+    "appId": "com.faceattendance.app",
+    "productName": "Face Recognition Attendance",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "electron/**/*",
+      "frontend/dist/**/*",
+      "package.json",
+      "!**/node_modules/**/*",
+      "!**/*.log"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
+  }
+}
