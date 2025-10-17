@@ -3,6 +3,8 @@ import Matakuliah from "../models/MataKuliahModel.js";
 import Enrollment from "../models/EnrollmentModel.js";
 import Presensi from "../models/PresensiModel.js";
 import Kelas from "../models/KelasModel.js";
+import { Op } from "sequelize";
+
 
 export const getStatistikUsers = async (req, res) => {
   try {
@@ -75,7 +77,7 @@ export const getMahasiswaDashboardData = async (req, res) => {
 
     const userId = user.id;
 
-    // Ambil semua mata kuliah yang diikuti
+    // Ambil semua matakuliah yang diikuti
     const enrollments = await Enrollment.findAll({
       where: { userId },
       include: {
@@ -89,31 +91,37 @@ export const getMahasiswaDashboardData = async (req, res) => {
     for (const e of enrollments) {
       const mk = e.matakuliah;
 
-      // Ambil semua kelas yang ada pada matakuliah ini
+      // Ambil semua kelas dari matakuliah ini
       const kelasList = await Kelas.findAll({
         where: { matakuliahUuid: mk.uuid },
         attributes: ["uuid"],
       });
 
       const kelasUuids = kelasList.map((k) => k.uuid);
-
       if (kelasUuids.length === 0) {
         chartData.push({ matakuliah: mk.matakuliah, persenPresensi: 0 });
         continue;
       }
 
-      // Hitung jumlah kehadiran mahasiswa di kelas-kelas tersebut
-      const hadir = await Presensi.count({
+      // Hitung total presensi (semua status)
+      const totalPresensi = await Presensi.count({
         where: {
           userId,
-          kelasUuid: kelasUuids,
-          status: "hadir",
+          kelasUuid: { [Op.in]: kelasUuids },
         },
       });
 
-      const totalKelas = kelasUuids.length;
+      // Hitung jumlah hadir atau terlambat (status positif)
+      const hadir = await Presensi.count({
+        where: {
+          userId,
+          kelasUuid: { [Op.in]: kelasUuids },
+          status: { [Op.in]: ["hadir", "terlambat"] },
+        },
+      });
 
-      const persen = Math.round((hadir / totalKelas) * 100);
+      const persen =
+        totalPresensi > 0 ? Math.round((hadir / totalPresensi) * 100) : 0;
 
       chartData.push({
         matakuliah: mk.matakuliah,

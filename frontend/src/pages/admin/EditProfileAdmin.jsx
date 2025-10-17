@@ -172,19 +172,45 @@ export default function EditProfileAdmin() {
         </div>
 
         <div className="flex gap-3 pt-4">
-          <button
-            onClick={() => navigate("/admin/profile")}
-            className="inline-flex items-center gap-2 px-5 py-2 bg-gray-500 text-white font-medium rounded-lg hover:bg-gray-600 transition"
-          >
-            <FaArrowLeft /> Kembali
-          </button>
-          <button
-            onClick={() => setShowConfirmModal(true)}
-            className="inline-flex items-center gap-2 px-5 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition"
-          >
-            <FaSave /> Simpan Perubahan
-          </button>
-        </div>
+  {/* Tombol Kembali */}
+  <button
+    onClick={() => navigate("/admin/profile")}
+    className="inline-flex items-center gap-2 px-6 py-2.5 
+               bg-[#374151] text-white font-semibold rounded-lg
+               hover:bg-[#111827] active:bg-black
+               shadow-lg hover:shadow-xl 
+               transition duration-150 ease-in-out
+               relative z-[9999]"
+    style={{
+      backgroundColor: '#374151',
+      color: 'white',
+      opacity: 1,
+      filter: 'none',
+    }}
+  >
+    <FaArrowLeft /> Kembali
+  </button>
+
+  {/* Tombol Simpan Perubahan */}
+  <button
+    onClick={() => setShowConfirmModal(true)}
+    className="inline-flex items-center gap-2 px-6 py-2.5 
+               bg-[#2563EB] text-white font-semibold rounded-lg
+               hover:bg-[#1E40AF] active:bg-[#1E3A8A]
+               shadow-lg hover:shadow-xl
+               transition duration-150 ease-in-out
+               relative z-[9999]"
+    style={{
+      backgroundColor: '#2563EB',
+      color: 'white',
+      opacity: 1,
+      filter: 'none',
+    }}
+  >
+    <FaSave /> Simpan Perubahan
+  </button>
+</div>
+
       </div>
 
       {/* Modal Konfirmasi */}

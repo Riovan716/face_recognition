@@ -70,7 +70,7 @@ export const getMatakuliahByUuid = async (req, res) => {
   }
 };
 
-// Tambah
+// Tambah oleh Dosen
 export const createMataKuliah = async (req, res) => {
   const {
     matakuliah,
@@ -83,8 +83,21 @@ export const createMataKuliah = async (req, res) => {
   } = req.body;
 
   try {
-    const hash = await argon2.hash(password); // 🔐 Hash password pakai Argon2
+    // 🧠 Pre-check: pastikan nama & kode tidak duplikat
+    const existingKode = await MataKuliah.findOne({ where: { kodematakuliah } });
+    if (existingKode) {
+      return res.status(400).json({ msg: "Kode mata kuliah sudah digunakan" });
+    }
 
+    const existingNama = await MataKuliah.findOne({ where: { matakuliah } });
+    if (existingNama) {
+      return res.status(400).json({ msg: "Nama mata kuliah sudah digunakan" });
+    }
+
+    // 🔐 Hash password dengan Argon2
+    const hash = await argon2.hash(password);
+
+    // 🧾 Simpan data matakuliah baru
     await MataKuliah.create({
       matakuliah,
       kodematakuliah,
@@ -92,24 +105,50 @@ export const createMataKuliah = async (req, res) => {
       sks,
       tahunajaran,
       userId,
-      password: hash, // ✅ Simpan hash, bukan password asli
+      password: hash,
     });
 
-    res.status(201).json({ msg: "Mata kuliah berhasil ditambahkan" });
+    return res.status(201).json({ msg: "Mata kuliah berhasil ditambahkan" });
   } catch (error) {
-    // Deteksi error karena field unik
-    if (error instanceof UniqueConstraintError) {
-      const field = error.errors[0]?.path;
-      if (field === "matakuliah") {
-        return res
-          .status(400)
-          .json({ msg: "Nama mata kuliah sudah digunakan" });
-      }
+    console.error("❌ Error createMataKuliah (dosen):", error);
+
+    // 🎯 Tangani error unik dari Sequelize
+    if (
+      error.name === "SequelizeUniqueConstraintError" ||
+      error instanceof UniqueConstraintError
+    ) {
+      const field = error?.errors?.[0]?.path || "unknown";
+      const message =
+        field === "matakuliah"
+          ? "Nama mata kuliah sudah digunakan"
+          : field === "kodematakuliah"
+          ? "Kode mata kuliah sudah digunakan"
+          : "Data sudah digunakan, harap gunakan nilai unik";
+      return res.status(400).json({ msg: message });
     }
 
-    res.status(500).json({ msg: error.message });
+    // 🎯 Tangani error validasi
+    if (error.name === "SequelizeValidationError") {
+      const message =
+        error.errors?.map((e) => e.message).join(", ") ||
+        "Input tidak valid, periksa kembali data yang dimasukkan.";
+      return res.status(400).json({ msg: message });
+    }
+
+    // 🧱 Tangani error database umum
+    if (error.name === "SequelizeDatabaseError") {
+      return res
+        .status(500)
+        .json({ msg: "Terjadi kesalahan pada database: " + error.message });
+    }
+
+    // 🔥 Fallback untuk error tak terduga
+    return res
+      .status(500)
+      .json({ msg: error.message || "Terjadi kesalahan pada server" });
   }
 };
+
 // Tambah oleh Admin
 export const createMataKuliahByAdmin = async (req, res) => {
   const {

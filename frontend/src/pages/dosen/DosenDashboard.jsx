@@ -369,7 +369,7 @@ export default function DosenDashboard() {
       </div>
 
       {/* Tambahkan Galeri Deteksi Wajah Real-time di bawah chart */}
-      <div className="bg-gradient-to-br from-white to-gray-50 p-8 rounded-xl shadow-lg border border-gray-100 mt-8">
+      {/* <div className="bg-gradient-to-br from-white to-gray-50 p-8 rounded-xl shadow-lg border border-gray-100 mt-8">
         <h2 className="text-2xl font-bold text-black mb-6 flex items-center">
           <span className="w-2 h-8 bg-green-500 rounded-full mr-3"></span>
           Galeri Mahasiswa Terdeteksi (Real-time)
@@ -437,7 +437,7 @@ export default function DosenDashboard() {
             })
           )}
         </div>
-      </div>
+      </div> */}
 
       {showCameraModal && cameraHidden && (
         <button
