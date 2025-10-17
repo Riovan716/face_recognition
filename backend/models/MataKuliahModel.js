@@ -21,6 +21,8 @@ const MataKuliah = db.define(
     kodematakuliah: {
       type: DataTypes.STRING,
       allowNull: false,
+      unique: true, // ✅ tambahkan baris ini
+
     },
     semester: {
       type: DataTypes.FLOAT,

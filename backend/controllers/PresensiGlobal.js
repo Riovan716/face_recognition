@@ -76,30 +76,49 @@ export const getPresensiGlobal = async (req, res) => {
 export const getGlobalDeskriptor = async (req, res) => {
   try {
     const mahasiswaList = await Mahasiswa.findAll({
-      where: {
-        deskriptorWajah: {
-          [Op.ne]: null,
-        },
-      },
-      attributes: ["nim", "deskriptorWajah", "userId"],
-      include: [
-        {
-          model: Users,
-          as: "user",
-          attributes: ["name"],
-        },
-      ],
+      where: { deskriptorWajah: { [Op.ne]: null } },
+      attributes: ["nim", "deskriptorWajah"],
+      include: [{ model: Users, as: "user", attributes: ["name"] }],
     });
 
-    const data = mahasiswaList.map((m) => ({
-      nim: m.nim,
-      nama: m.user ? m.user.name : null,
-      descriptor: JSON.parse(m.deskriptorWajah),
-    }));
+    const data = mahasiswaList.map((m) => {
+      let descriptor = null;
+      try {
+        console.log(
+          "📦 NIM:", m.nim,
+          "| Type:", typeof m.deskriptorWajah,
+          "| Value:", m.deskriptorWajah
+        );
 
-    res.status(200).json(data);
+        let raw = m.deskriptorWajah;
+        if (Buffer.isBuffer(raw)) raw = raw.toString("utf8");
+        else if (typeof raw === "object") raw = JSON.stringify(raw);
+        else raw = String(raw);
+
+        raw = raw.trim();
+
+        // coba parse
+        const arr = eval(raw);
+        if (Array.isArray(arr)) descriptor = Array.from(arr);
+      } catch (err) {
+        console.warn(`⚠️ Gagal parse deskriptor NIM ${m.nim}:`, err.message);
+      }
+
+      return {
+        nim: m.nim,
+        nama: m.user?.name || null,
+        descriptor,
+      };
+    });
+
+    const validData = data.filter((d) => d.descriptor && d.descriptor.length > 0);
+    console.log("✅ Total deskriptor valid:", validData.length);
+
+    res.status(200).json(validData);
   } catch (err) {
-    console.error("❌ Gagal ambil deskriptor global:", err.message);
-    res.status(500).json({ msg: "Server error" });
+    console.error("🔥 Gagal ambil deskriptor global:", err);
+    res.status(500).json({ msg: "Server error", error: err.message });
   }
 };
+
+

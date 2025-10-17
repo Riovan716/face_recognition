@@ -96,10 +96,10 @@ export default function AdminTambahMatakuliah() {
           </Link>
           <span className="text-black-500">●</span>
           <Link
-            to="/admin/matakuliah"
+            to="/admin/matakuliah-absen"
             className="hover:underline !text-black hover:!text-blue-600 transition duration-150 ease-in-out"
           >
-            Matakuliah
+            Data Matakuliah
           </Link>
           <span className="text-black-500">●</span>
           <span className="text-black font-medium">Tambah</span>

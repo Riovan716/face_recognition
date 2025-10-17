@@ -110,7 +110,6 @@ export const createMataKuliah = async (req, res) => {
     res.status(500).json({ msg: error.message });
   }
 };
-
 // Tambah oleh Admin
 export const createMataKuliahByAdmin = async (req, res) => {
   const {
@@ -124,54 +123,95 @@ export const createMataKuliahByAdmin = async (req, res) => {
   } = req.body;
 
   try {
-    // Verifikasi bahwa user yang request adalah admin
+    // 🔐 Verifikasi bahwa user yang request adalah admin
     if (!req.session.userId) {
       return res.status(401).json({ msg: "Unauthorized" });
     }
 
     const admin = await Users.findOne({ where: { uuid: req.session.userId } });
     if (!admin || admin.role !== "admin") {
-      return res.status(403).json({ msg: "Hanya admin yang dapat menambah matakuliah" });
+      return res
+        .status(403)
+        .json({ msg: "Hanya admin yang dapat menambah mata kuliah" });
     }
 
-    // Cari dosen yang dipilih
-    const dosen = await Users.findOne({ where: { id: dosenId, role: "dosen" } });
+    // 🎓 Cari dosen yang dipilih
+    const dosen = await Users.findOne({
+      where: { id: dosenId, role: "dosen" },
+    });
     if (!dosen) {
       return res.status(404).json({ msg: "Dosen tidak ditemukan" });
     }
 
-    // Hash password matakuliah
+    // 🧠 Pre-check: pastikan kode & nama belum digunakan
+    const existingKode = await MataKuliah.findOne({
+      where: { kodematakuliah },
+    });
+    if (existingKode) {
+      return res.status(400).json({ msg: "Kode mata kuliah sudah digunakan" });
+    }
+
+    const existingNama = await MataKuliah.findOne({
+      where: { matakuliah },
+    });
+    if (existingNama) {
+      return res.status(400).json({ msg: "Nama mata kuliah sudah digunakan" });
+    }
+
+    // 🔑 Hash password matakuliah
     const hash = await argon2.hash(password);
 
-    // Buat matakuliah baru dengan userId dosen yang dipilih
+    // 🧾 Buat matakuliah baru dengan userId dosen yang dipilih
     await MataKuliah.create({
       matakuliah,
       kodematakuliah,
       semester,
       sks,
       tahunajaran,
-      userId: dosen.id, // Gunakan ID dosen yang dipilih
+      userId: dosen.id,
       password: hash,
     });
 
-    res.status(201).json({ msg: "Mata kuliah berhasil ditambahkan" });
+    return res
+      .status(201)
+      .json({ msg: "Mata kuliah berhasil ditambahkan" });
   } catch (error) {
-    // Deteksi error karena field unik
-    if (error instanceof UniqueConstraintError) {
-      const field = error.errors[0]?.path;
-      if (field === "matakuliah") {
-        return res
-          .status(400)
-          .json({ msg: "Nama mata kuliah sudah digunakan" });
-      }
-      if (field === "kodematakuliah") {
-        return res
-          .status(400)
-          .json({ msg: "Kode mata kuliah sudah digunakan" });
-      }
+    console.error("❌ Error createMataKuliahByAdmin:", error);
+
+    // 🎯 Tangani error unik dari Sequelize
+    if (
+      error.name === "SequelizeUniqueConstraintError" ||
+      error instanceof UniqueConstraintError
+    ) {
+      const field = error?.errors?.[0]?.path || "unknown";
+      const message =
+        field === "matakuliah"
+          ? "Nama mata kuliah sudah digunakan"
+          : field === "kodematakuliah"
+          ? "Kode mata kuliah sudah digunakan"
+          : "Data sudah digunakan, harap gunakan nilai unik";
+      return res.status(400).json({ msg: message });
     }
 
-    res.status(500).json({ msg: error.message });
+    // 🎯 Tangani error validasi (misalnya field kosong, panjang field tidak sesuai)
+    if (error.name === "SequelizeValidationError") {
+      const message =
+        error.errors?.map((e) => e.message).join(", ") ||
+        "Input tidak valid, periksa kembali data yang dimasukkan.";
+      return res.status(400).json({ msg: message });
+    }
+
+    // 🧱 Tangani error database umum (misalnya koneksi atau query)
+    if (error.name === "SequelizeDatabaseError") {
+      return res
+        .status(500)
+        .json({ msg: "Terjadi kesalahan pada database: " + error.message });
+    }
+
+    // 🔥 Fallback untuk error tak terduga
+    return res
+      .status(500)
+      .json({ msg: error.message || "Terjadi kesalahan pada server" });
   }
 };
 

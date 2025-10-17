@@ -92,26 +92,33 @@ function Login() {
 
   // Camera functions for global attendance
   const openCamera = async () => {
-    setShowCameraModal(true);
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      videoRef.current.srcObject = stream;
-      setIsCameraOn(true);
-      setStatus("Kamera aktif");
-      setDetectedNIMs([]);
-      const res = await axios.get(
-        "http://localhost:5000/presensiglobal/deskriptor",
-        { withCredentials: true }
-      );
-      setStudentsWithFace(
-        res.data.map((item) => ({ nim: item.nim, nama: item.nama }))
-      );
-      // Ambil unknown face dari database
-      await fetchUnknownFaces();
-    } catch (err) {
-      setStatus("❌ Gagal membuka kamera");
-    }
-  };
+  setShowCameraModal(true);
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+    videoRef.current.srcObject = stream;
+    setIsCameraOn(true);
+    setStatus("Kamera aktif");
+  } catch {
+    setStatus("❌ Gagal mengakses kamera");
+    return;
+  }
+
+  try {
+    const res = await axios.get("http://localhost:5000/presensiglobal/deskriptor");
+    console.log("✅ Deskriptor diterima:", res.data);
+    setStudentsWithFace(
+      res.data.map((item) => ({
+        nim: item.nim,
+        nama: item.nama,
+        descriptor: item.descriptor,
+      }))
+    );
+    await fetchUnknownFaces();
+  } catch (err) {
+    console.error("❌ Gagal ambil deskriptor global:", err.message);
+    setStatus("❌ Gagal memuat data wajah");
+  }
+};
 
   const stopCamera = () => {
     const stream = videoRef.current?.srcObject;
