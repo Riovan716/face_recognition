@@ -122,8 +122,8 @@ export const updateMahasiswa = async (req, res) => {
         fs.writeFileSync(filePath, req.file.buffer);
         console.log("✅ File berhasil disimpan:", filePath);
 
-        // Update path untuk database
-        faceImagePath = `/mahasiswa/face_recognition/dataset/${filename}`;
+        // Update path untuk database (samakan dengan admin)
+        faceImagePath = `/face_recognition/dataset/${filename}`;
 
         // Coba load model face-api dengan fallback
         try {
@@ -133,9 +133,10 @@ export const updateMahasiswa = async (req, res) => {
           const img = await canvas.loadImage(filePath);
           console.log("🔄 Processing face detection...");
           
-          // Coba deteksi wajah dengan timeout
+          // Coba deteksi wajah dengan API standar (sama seperti alur admin)
+          // Hindari opsi custom yang menyebabkan error tipe options
           const detectionPromise = faceapi
-            .detectSingleFace(img, { minConfidence: 0.5 })
+            .detectSingleFace(img)
             .withFaceLandmarks()
             .withFaceDescriptor();
           
@@ -147,7 +148,8 @@ export const updateMahasiswa = async (req, res) => {
           ]);
 
           if (detection?.descriptor?.length === 128) {
-            deskriptorWajah = JSON.stringify(Array.from(detection.descriptor));
+            // Simpan sebagai array (konsisten dengan alur admin)
+            deskriptorWajah = Array.from(detection.descriptor);
             console.log("✅ Deskriptor berhasil dibuat dari file");
           } else {
             console.warn("⚠️ Tidak ditemukan wajah dalam file atau wajah tidak jelas");
@@ -181,7 +183,8 @@ export const updateMahasiswa = async (req, res) => {
           : JSON.parse(req.body.deskriptorWajah);
         
         if (parsed.length === 128) {
-          deskriptorWajah = JSON.stringify(parsed);
+          // Simpan sebagai array, bukan string
+          deskriptorWajah = parsed;
           console.log("✅ Deskriptor diterima dari kamera dan disimpan");
         } else {
           console.warn("⚠️ Deskriptor tidak valid (harus 128 elemen)");

@@ -146,7 +146,7 @@ export default function DosenEnrolledMahasiswa() {
                 {/* Student Photo */}
                 <div className="flex justify-center mt-4 mb-2">
                   <img
-                    src={`http://localhost:5000/mahasiswa/face_recognition/dataset/${mhs.nim}.jpg`}
+                    src={`http://localhost:5000/face_recognition/dataset/${mhs.nim}.jpg`}
                     alt={mhs.name}
                     style={{ width: 80, height: 80, objectFit: "cover", borderRadius: "50%", border: "2px solid #eee" }}
                     onError={e => e.target.style.display='none'}

@@ -1,4 +1,5 @@
 import Users from "../models/UserModel.js";
+import Mahasiswa from "../models/MahasiswaModel.js";
 import Matakuliah from "../models/MataKuliahModel.js";
 import Enrollment from "../models/EnrollmentModel.js";
 import Presensi from "../models/PresensiModel.js";
@@ -77,6 +78,15 @@ export const getMahasiswaDashboardData = async (req, res) => {
 
     const userId = user.id;
 
+    // Cari data mahasiswa berdasarkan userId
+    const mahasiswa = await Mahasiswa.findOne({ where: { userId } });
+    if (!mahasiswa) {
+      return res.json({
+        totalMatakuliah: 0,
+        chartData: [],
+      });
+    }
+
     // Ambil semua matakuliah yang diikuti
     const enrollments = await Enrollment.findAll({
       where: { userId },
@@ -103,25 +113,21 @@ export const getMahasiswaDashboardData = async (req, res) => {
         continue;
       }
 
-      // Hitung total presensi (semua status)
-      const totalPresensi = await Presensi.count({
-        where: {
-          userId,
-          kelasUuid: { [Op.in]: kelasUuids },
-        },
-      });
+      // Hitung total kelas yang seharusnya diikuti (total kelas dari matakuliah ini)
+      const totalKelas = kelasUuids.length;
 
-      // Hitung jumlah hadir atau terlambat (status positif)
+      // Hitung jumlah hadir atau terlambat (status positif) untuk mahasiswa ini di kelas-kelas ini
       const hadir = await Presensi.count({
         where: {
-          userId,
+          userId: mahasiswa.id, // Gunakan mahasiswa.id karena presensi disimpan dengan mahasiswa.id
           kelasUuid: { [Op.in]: kelasUuids },
           status: { [Op.in]: ["hadir", "terlambat"] },
         },
       });
 
+      // Hitung persentase berdasarkan total kelas yang seharusnya diikuti
       const persen =
-        totalPresensi > 0 ? Math.round((hadir / totalPresensi) * 100) : 0;
+        totalKelas > 0 ? Math.round((hadir / totalKelas) * 100) : 0;
 
       chartData.push({
         matakuliah: mk.matakuliah,

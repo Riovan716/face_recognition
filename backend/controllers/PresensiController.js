@@ -65,7 +65,7 @@ export const presensiOtomatis = async (req, res) => {
       .map((m) => ({
         userId: m.id, // Gunakan mahasiswa.id sebagai foreign key
         kelasUuid,
-        status: "Hadir",
+        status: "hadir",
         waktu: new Date(),
       }));
 
@@ -215,10 +215,14 @@ export const getStatusPresensiMahasiswa = async (req, res) => {
 
     if (!user) return res.status(404).json({ msg: "User not found" });
 
-    const userId = user.id;
+    // Cari data mahasiswa berdasarkan userId
+    const mahasiswa = await Mahasiswa.findOne({ where: { userId: user.id } });
+    if (!mahasiswa) {
+      return res.status(404).json({ msg: "Mahasiswa data not found" });
+    }
 
     const records = await Presensi.findAll({
-      where: { userId },
+      where: { userId: mahasiswa.id }, // Gunakan mahasiswa.id karena presensi disimpan dengan mahasiswa.id
       attributes: ["kelasUuid"],
       group: ["kelasUuid"],
     });

@@ -46,9 +46,20 @@ console.log('CWD:', process.cwd());
 app.use(
   cors({
     credentials: true,
-    origin: process.env.NODE_ENV === 'production' 
-      ? ["http://localhost:5000", "file://*", "https://*"] 
-      : [/^file:\/\/.*/, "http://localhost:5173"],
+    // Allow Electron (file://) and requests without Origin header
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true); // allow non-browser or file:// with no Origin
+      const allowedList =
+        process.env.NODE_ENV === 'production'
+          ? ["http://localhost:5000", /^file:\/\//, /^https?:\/\//]
+          : [/^file:\/\//, "http://localhost:5173", "http://localhost:5000"]; // dev
+      const isAllowed = allowedList.some((o) =>
+        o instanceof RegExp ? o.test(origin) : o === origin
+      );
+      callback(null, isAllowed);
+    },
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 app.use(express.json());
@@ -69,9 +80,13 @@ app.use(
 // Serve static files for frontend build
 app.use(express.static(path.join(__dirname, '../frontend/dist')));
 
-// Serve static files for face dataset
+// Serve static files for face dataset (legacy + new path)
 app.use(
   '/mahasiswa/face_recognition/dataset',
+  express.static(path.join(process.cwd(), 'face_recognition/dataset'))
+);
+app.use(
+  '/face_recognition/dataset',
   express.static(path.join(process.cwd(), 'face_recognition/dataset'))
 );
 

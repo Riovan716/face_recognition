@@ -594,7 +594,7 @@ export default function DosenDetailMatakuliah() {
                                 src={
                                   capturedPhoto
                                     ? capturedPhoto
-                                    : `http://localhost:5000/mahasiswa/face_recognition/dataset/${mhs.nim}.jpg`
+                                    : `http://localhost:5000/face_recognition/dataset/${mhs.nim}.jpg`
                                 }
                                 alt={`Foto ${mhs.nama}`}
                                 className="w-full h-full object-contain bg-white"

@@ -219,7 +219,7 @@ export const getMahasiswaEnrolledWithPresensi = async (req, res) => {
                   attributes: ["status"],
                   where: {
                     kelasUuid: { [Op.in]: kelasUuids },
-                    status: "Hadir", // Hanya hitung yang 'Hadir'
+                    status: { [Op.in]: ["hadir", "terlambat"] }, // Hitung yang hadir atau terlambat
                   },
                   required: false, // Gunakan LEFT JOIN
                 },
